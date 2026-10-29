@@ -3,7 +3,7 @@
 > 個人作品集專案｜Python · FastAPI · PostgreSQL · Docker · GitHub Actions · LINE Messaging API · LINE Pay v3
 > 以 AI 輔助開發（Claude）完成，流程與規範見 [`docs/AI_WORKFLOW.md`](docs/AI_WORKFLOW.md)
 
-![CI](https://github.com/<your-account>/dineflow/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/mathew0315/dineflow/actions/workflows/ci.yml/badge.svg)
 
 ## 一句話
 一套讓小吃店「開店 → 上架菜單 → 顧客線上點餐 / 櫃台 POS 點餐 → LINE 通知老闆 → LINE Pay 付款 → 每日營收報表」的 SaaS 後端，多家店共用同一系統、資料彼此隔離。
