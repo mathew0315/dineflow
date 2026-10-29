@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dineflow
+          POSTGRES_PASSWORD: dineflow
+          POSTGRES_DB: dineflow_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U dineflow"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://dineflow:dineflow@localhost:5432/dineflow_test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements-dev.txt pip-audit
+      - name: Lint (含 bandit 資安規則)
+        run: ruff check .
+      - name: 依賴弱點掃描（OWASP A03 Supply Chain）
+        run: pip-audit -r requirements.txt
+      - name: Test (PostgreSQL 整合測試 + 覆蓋率)
+        run: pytest --cov=app --cov-report=term --cov-fail-under=85
+
+  docker:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build image
+        run: docker build -t dineflow:ci .
