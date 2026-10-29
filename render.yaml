@@ -1,0 +1,20 @@
+# Render Blueprint：一鍵部署公開 Demo（免費方案）
+# 資料庫用 Neon 免費 PostgreSQL（Render 免費資料庫 30 天後會過期，Neon 不會）
+services:
+  - type: web
+    name: dineflow
+    runtime: docker
+    plan: free
+    region: singapore          # 離台灣最近
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: demo
+      - key: DEMO_MODE
+        value: "true"          # 每次喚醒重置示範店資料
+      - key: AUTO_CREATE_TABLES
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true    # Render 自動產生隨機密鑰，不進版本控制
+      - key: DATABASE_URL
+        sync: false            # 建立時手動貼上 Neon 的連線字串

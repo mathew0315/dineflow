@@ -2,26 +2,44 @@
 import logging
 import time
 import uuid
+from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import get_settings
-from app.db import Base, engine
+from app.db import Base, SessionLocal, engine
 from app.routers import auth, menu, orders, reports, stores
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 log = logging.getLogger("dineflow")
 settings = get_settings()
 
+STATIC_DIR = Path(__file__).parent / "static"  # 前端 build 產物（Docker build 時產生）
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    if settings.auto_create_tables:
+        Base.metadata.create_all(engine)
+    if settings.demo_mode:
+        from app.services.demo import seed_demo
+        with SessionLocal() as db:
+            seed_demo(db)
+    yield
+
+
 app = FastAPI(
     title="DineFlow API",
-    version="0.1.0",
+    version="0.2.0",
     description="多租戶餐飲 SaaS：線上開店、POS、訂餐、LINE 通知、LINE Pay",
-    # 正式環境關閉互動文件，減少攻擊面（OWASP A02 Security Misconfiguration）
+    # 正式環境關閉互動文件，減少攻擊面（OWASP A02 Security Misconfiguration）；Demo 保留供面試官查看
     docs_url=None if settings.app_env == "prod" else "/docs",
     redoc_url=None,
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -42,7 +60,8 @@ async def request_context(request: Request, call_next):
     response.headers["X-Request-ID"] = rid
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
-    log.info("req id=%s %s %s -> %s %.1fms", rid, request.method, request.url.path, response.status_code, ms)
+    if request.url.path.startswith("/api/"):
+        log.info("req id=%s %s %s -> %s %.1fms", rid, request.method, request.url.path, response.status_code, ms)
     return response
 
 
@@ -62,6 +81,16 @@ for r in (auth.router, stores.router, menu.router, orders.router, reports.router
     app.include_router(r)
 
 
-if settings.app_env == "dev":
-    # 開發環境自動建表；正式環境應使用 migration 工具（如 Alembic）
-    Base.metadata.create_all(engine)
+# ---------- 前端（單頁應用）：同一個服務一起提供，部署只需一個免費 web service ----------
+if (STATIC_DIR / "index.html").is_file():
+    app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def spa(path: str):
+        if path.startswith(("api/", "docs", "openapi.json")):
+            raise HTTPException(404, "Not Found")
+        file = (STATIC_DIR / path).resolve()
+        # 只允許讀取 static 目錄內的檔案（防路徑穿越），其餘交給前端路由
+        if path and file.is_file() and file.is_relative_to(STATIC_DIR.resolve()):
+            return FileResponse(file)
+        return FileResponse(STATIC_DIR / "index.html")

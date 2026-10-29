@@ -6,6 +6,8 @@
 import os
 
 os.environ.setdefault("APP_ENV", "test")
+os.environ.setdefault("AUTO_CREATE_TABLES", "false")  # 測試自行建表，不碰預設資料庫
+os.environ.setdefault("DEMO_MODE", "false")
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

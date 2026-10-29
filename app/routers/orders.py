@@ -51,6 +51,15 @@ def place_online_order(
     return order
 
 
+@router.get("/api/public/orders/{order_id}", response_model=OrderOut)
+def track_order(order_id: int, phone: str = Query(pattern=r"^09\d{8}$"), db: Session = Depends(get_db)):
+    """顧客查詢自己的訂單狀態：需同時提供下單手機，避免他人以 id 枚舉窺探（OWASP A01）。"""
+    order = db.scalar(select(Order).options(selectinload(Order.items)).where(Order.id == order_id))
+    if order is None or order.customer_phone != phone:
+        raise HTTPException(404, "訂單不存在")
+    return order
+
+
 # ---------- POS（店員） ----------
 @router.post("/api/pos/orders", response_model=OrderOut, status_code=201)
 def place_pos_order(

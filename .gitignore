@@ -6,3 +6,9 @@ __pycache__/
 htmlcov/
 .pytest_cache/
 .ruff_cache/
+
+# 前端
+frontend/node_modules/
+app/static/
+e2e-shots/
+server.log

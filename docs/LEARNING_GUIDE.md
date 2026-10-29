@@ -13,6 +13,9 @@
 | 6 | `app/services/orders.py` | 核心商業邏輯：計價、快照、冪等、狀態機 |
 | 7 | `app/routers/orders.py` | 線上點餐 / POS / LINE Pay 流程 |
 | 8 | `tests/` | 每個測試在驗證什麼風險 |
+| 9 | `frontend/src/api.ts` | 前端怎麼帶 token、處理錯誤與 401 |
+| 10 | `frontend/src/pages/OrderPage.tsx` | 顧客點餐：狀態管理、冪等鍵、表單驗證 |
+| 11 | `frontend/src/admin/Board.tsx` | 訂單看板：輪詢、狀態推進 |
 
 ## 必懂關鍵字
 | 關鍵字 | 一句話 |
@@ -43,3 +46,5 @@
 5. 你怎麼用 AI 開發？怎麼確保 AI 寫的是對的？→ 講 `AI_WORKFLOW.md` 流程與 Checklist
 6. 單元測試和整合測試差在哪？→ 純邏輯 vs 走 HTTP + DB
 7. 為什麼用 Docker？CI 做了什麼？→ 環境一致；lint → 弱點掃描 → 測試 → build
+8. 為什麼看板用輪詢不用 WebSocket？→ 免費主機會休眠、連線易斷；小店流量下輪詢簡單可靠，取捨寫在 README
+9. JWT 放 localStorage 的風險？→ XSS 可竊取；改 HttpOnly Cookie + CSRF 防護（列在資安待辦）

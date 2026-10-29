@@ -1,0 +1,246 @@
+/* DineFlow：台灣小吃店「紙本點菜單」
+   紅墨水印刷的格線 + 原子筆字 + 螢光筆標記；背景是店裡的淺綠磁磚牆 */
+
+:root {
+  --paper: #ffffff;
+  --tile: #e3ece7;        /* 小吃店磁磚牆 */
+  --tile-line: #d3dfd8;
+  --ink-red: #c0272d;     /* 點菜單的紅色印刷 */
+  --ink-red-soft: #f3c9cb;
+  --ink: #1f2b38;         /* 原子筆藍黑 */
+  --pencil: #66707b;
+  --marker: #ffe24a;      /* 螢光筆 */
+  --jade: #2d6a55;        /* 可取餐 */
+  --amber: #b5650f;       /* 製作中 */
+  --radius: 4px;
+  --serif: "Noto Serif TC", "Songti TC", serif;
+  --sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --hand: "Kalam", "Comic Sans MS", cursive;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background-color: var(--tile);
+  /* 磁磚縫 */
+  background-image:
+    linear-gradient(var(--tile-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--tile-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--ink-red); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+/* ---------- 共用元件 ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4em;
+  padding: .6em 1.1em; border-radius: var(--radius);
+  border: 2px solid var(--ink); background: var(--paper);
+  font-weight: 700; cursor: pointer; text-decoration: none; color: var(--ink);
+  min-height: 44px;
+}
+.btn:hover { background: #f5f7f6; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-red { background: var(--ink-red); border-color: var(--ink-red); color: #fff; }
+.btn-red:hover { background: #a51f25; }
+.btn-jade { background: var(--jade); border-color: var(--jade); color: #fff; }
+.btn-jade:hover { background: #22533f; }
+.btn-ghost { border-color: transparent; background: transparent; color: var(--pencil); }
+.btn-sm { padding: .3em .7em; min-height: 36px; font-size: .9rem; }
+
+.field { display: grid; gap: .25rem; }
+.field label { font-size: .9rem; color: var(--pencil); }
+.field input, .field select, .field textarea {
+  border: 0; border-bottom: 2px solid var(--ink-red-soft); background: transparent;
+  padding: .45rem .1rem; border-radius: 0;
+}
+.field input:focus, .field textarea:focus, .field select:focus { outline: none; border-bottom-color: var(--ink-red); }
+
+.error { color: var(--ink-red); font-weight: 700; }
+.muted { color: var(--pencil); }
+.hand { font-family: var(--hand); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- 點菜單（紙張） ---------- */
+.sheet {
+  background: var(--paper);
+  border: 2px solid var(--ink-red);
+  box-shadow: 0 1px 0 var(--ink-red), 6px 8px 0 rgba(31, 43, 56, .08);
+  max-width: 560px; margin: 1.5rem auto; position: relative;
+}
+.sheet-head {
+  border-bottom: 2px solid var(--ink-red);
+  padding: 1.1rem 1.25rem .9rem; text-align: center; color: var(--ink-red);
+}
+.sheet-head h1 {
+  font-family: var(--serif); font-weight: 900; margin: 0;
+  font-size: clamp(1.6rem, 6vw, 2.1rem); letter-spacing: .35em; text-indent: .35em;
+}
+.sheet-head p { margin: .2rem 0 0; color: var(--ink); font-weight: 500; }
+.sheet-meta {
+  display: grid; grid-template-columns: 1fr 1fr; border-bottom: 2px solid var(--ink-red);
+}
+.sheet-meta > div { padding: .5rem 1rem; color: var(--ink-red); font-size: .9rem; }
+.sheet-meta > div + div { border-left: 1px solid var(--ink-red); }
+.sheet-meta strong { color: var(--ink); font-family: var(--hand); font-size: 1.15rem; margin-left: .4rem; }
+
+table.menu { width: 100%; border-collapse: collapse; }
+table.menu th, table.menu td { border-bottom: 1px solid var(--ink-red-soft); padding: .55rem .75rem; text-align: left; }
+table.menu thead th {
+  color: var(--ink-red); font-weight: 700; font-size: .85rem; border-bottom: 2px solid var(--ink-red);
+}
+table.menu td + td, table.menu th + th { border-left: 1px solid var(--ink-red-soft); }
+table.menu .cat td {
+  color: var(--ink-red); font-family: var(--serif); font-weight: 700;
+  background: #fff7f7; border-bottom: 1px solid var(--ink-red); padding: .3rem .75rem;
+}
+table.menu .col-price { width: 4.5rem; text-align: right; color: var(--ink-red); }
+table.menu .col-qty { width: 8.5rem; text-align: center; }
+table.menu tr.picked .item-name {
+  /* 螢光筆畫過的效果 */
+  background: linear-gradient(transparent 38%, var(--marker) 38%, var(--marker) 88%, transparent 88%);
+}
+.item-name { font-weight: 500; padding: 0 .1em; }
+
+.stepper { display: inline-flex; align-items: center; gap: .15rem; }
+.stepper button {
+  width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--ink-red);
+  background: var(--paper); color: var(--ink-red); font-weight: 700; cursor: pointer; line-height: 1;
+}
+.stepper button:disabled { opacity: .3; cursor: default; }
+.stepper .qty { min-width: 2rem; text-align: center; font-family: var(--hand); font-size: 1.45rem; color: var(--ink); }
+
+.sheet-body { padding: 1rem 1.25rem; display: grid; gap: 1rem; }
+.sheet-foot {
+  position: sticky; bottom: 0; background: var(--paper);
+  border-top: 2px solid var(--ink-red); padding: .8rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+.total { font-size: 1.05rem; color: var(--ink-red); }
+.total strong { font-family: var(--hand); font-size: 1.8rem; color: var(--ink); margin-left: .3rem; }
+
+/* ---------- 取餐狀態：蓋章 ---------- */
+.stamp {
+  display: inline-block; font-family: var(--serif); font-weight: 900;
+  font-size: clamp(1.8rem, 9vw, 2.6rem); letter-spacing: .2em; text-indent: .2em;
+  padding: .2rem 1.1rem; border: 4px double currentColor; border-radius: 8px;
+  transform: rotate(-6deg); opacity: .9;
+}
+.stamp-pending { color: var(--pencil); }
+.stamp-preparing { color: var(--amber); }
+.stamp-ready { color: var(--jade); animation: stamp-in .35s ease-out; }
+.stamp-completed { color: var(--ink); }
+.stamp-cancelled { color: var(--ink-red); }
+@keyframes stamp-in { from { transform: rotate(-6deg) scale(1.6); opacity: 0; } to { transform: rotate(-6deg) scale(1); opacity: .9; } }
+@media (prefers-reduced-motion: reduce) { .stamp-ready { animation: none; } }
+
+.progress { display: flex; gap: .25rem; list-style: none; padding: 0; margin: 0; }
+.progress li { flex: 1; text-align: center; font-size: .85rem; color: var(--pencil); padding-top: .5rem; border-top: 4px solid var(--tile-line); }
+.progress li.done { color: var(--ink); border-top-color: var(--ink-red); font-weight: 700; }
+
+/* ---------- 首頁 ---------- */
+.home { max-width: 960px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+.home-hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 2rem; align-items: center; }
+.home-hero h1 { font-family: var(--serif); font-weight: 900; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.25; margin: 0 0 1rem; }
+.home-hero p { font-size: 1.05rem; max-width: 34em; }
+.mini-sheet { transform: rotate(2deg); margin: 0; max-width: 360px; justify-self: center; }
+.mini-sheet table.menu td { padding: .35rem .6rem; }
+.home-paths { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 2.5rem; }
+.path { background: var(--paper); border-top: 4px solid var(--ink-red); padding: 1.1rem 1.2rem 1.3rem; display: grid; gap: .5rem; align-content: start; }
+.path h2 { margin: 0; font-size: 1.15rem; }
+.path p { margin: 0; color: var(--pencil); font-size: .95rem; }
+.cred { font-size: .9rem; background: #f6f8f7; padding: .5rem .6rem; border-radius: var(--radius); }
+.cred code { font-size: .88rem; word-break: break-all; }
+.home-tech { margin-top: 2.5rem; background: var(--paper); padding: 1.2rem 1.4rem; }
+.home-tech h2 { margin: 0 0 .5rem; font-size: 1.1rem; }
+.home-tech ul { margin: 0; padding-left: 1.2rem; }
+
+/* ---------- 後台 ---------- */
+.topbar {
+  background: var(--ink-red); color: #fff; display: flex; align-items: center; gap: 1rem;
+  padding: .55rem 1rem; flex-wrap: wrap;
+}
+.topbar .brand { font-family: var(--serif); font-weight: 900; letter-spacing: .1em; }
+.topbar .who { margin-left: auto; font-size: .85rem; opacity: .9; }
+.topbar .btn-ghost { color: #fff; }
+.tabs { display: flex; gap: .25rem; background: var(--paper); padding: 0 .75rem; border-bottom: 2px solid var(--ink-red); overflow-x: auto; }
+.tabs a {
+  padding: .7rem .9rem; text-decoration: none; color: var(--pencil); font-weight: 700; white-space: nowrap;
+  border-bottom: 4px solid transparent; margin-bottom: -2px;
+}
+.tabs a.active { color: var(--ink); border-bottom-color: var(--ink-red); }
+.page { max-width: 1200px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+.page h2 { margin: 0 0 1rem; font-size: 1.25rem; }
+.panel { background: var(--paper); padding: 1rem 1.2rem; }
+
+/* 出餐口的單據軌道 */
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.rail { background: rgba(255,255,255,.55); border-top: 6px solid var(--ink); padding: .75rem; min-height: 50vh; }
+.rail h3 { margin: 0 0 .75rem; display: flex; justify-content: space-between; align-items: baseline; font-size: 1rem; }
+.rail h3 .count { font-family: var(--hand); font-size: 1.4rem; }
+.rail-pending { border-top-color: var(--ink-red); }
+.rail-preparing { border-top-color: var(--amber); }
+.rail-ready { border-top-color: var(--jade); }
+.ticket {
+  background: var(--paper); border: 1px solid #d7dcd9; border-top: 2px dashed var(--pencil);
+  padding: .7rem .8rem; margin-bottom: .75rem; display: grid; gap: .35rem;
+}
+.ticket-head { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
+.ticket-no { font-family: var(--hand); font-size: 1.5rem; line-height: 1; }
+.tag { font-size: .75rem; padding: .05rem .45rem; border: 1px solid currentColor; border-radius: 99px; white-space: nowrap; }
+.tag-online { color: var(--ink-red); }
+.tag-pos { color: var(--ink); }
+.ticket ul { margin: 0; padding: 0; list-style: none; }
+.ticket li { display: flex; justify-content: space-between; }
+.ticket li .q { font-family: var(--hand); font-size: 1.15rem; }
+.ticket-actions { display: flex; gap: .4rem; justify-content: flex-end; flex-wrap: wrap; }
+.empty { color: var(--pencil); font-size: .95rem; text-align: center; padding: 1.5rem .5rem; }
+
+/* POS */
+.pos { display: grid; grid-template-columns: 1fr 340px; gap: 1rem; align-items: start; }
+.pos-cat h3 { font-size: .95rem; color: var(--ink-red); margin: .5rem 0; font-family: var(--serif); }
+.pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: .5rem; }
+.pos-item {
+  background: var(--paper); border: 2px solid #d7dcd9; border-radius: var(--radius);
+  padding: .7rem .6rem; text-align: left; cursor: pointer; min-height: 72px; display: grid; gap: .1rem;
+}
+.pos-item:hover { border-color: var(--ink-red); }
+.pos-item:disabled { opacity: .4; cursor: not-allowed; }
+.pos-item .p { color: var(--ink-red); font-size: .9rem; }
+.pos-ticket { position: sticky; top: 1rem; }
+
+/* 表格（菜單管理） */
+table.grid { width: 100%; border-collapse: collapse; background: var(--paper); }
+table.grid th, table.grid td { padding: .55rem .6rem; border-bottom: 1px solid #e2e7e4; text-align: left; vertical-align: middle; }
+table.grid th { font-size: .85rem; color: var(--pencil); font-weight: 700; }
+table.grid input { width: 6rem; border: 1px solid #cfd6d2; border-radius: var(--radius); padding: .3rem .4rem; }
+.soldout { color: var(--pencil); text-decoration: line-through; }
+
+/* 報表 */
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem; }
+.kpi { background: var(--paper); padding: 1rem 1.2rem; }
+.kpi .v { font-family: var(--hand); font-size: 2.2rem; line-height: 1.1; }
+.kpi .l { color: var(--pencil); font-size: .9rem; }
+.bar-row { display: grid; grid-template-columns: 7rem 1fr 2.5rem; gap: .6rem; align-items: center; margin: .45rem 0; }
+.bar { height: 14px; background: var(--marker); border: 1px solid #e0c22c; }
+
+.toast {
+  position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%);
+  background: var(--ink); color: #fff; padding: .6rem 1rem; border-radius: var(--radius); z-index: 50;
+}
+
+@media (max-width: 860px) {
+  .home-hero, .home-paths, .pos, .kpis { grid-template-columns: 1fr !important; }
+  .board { grid-template-columns: 1fr; }
+  .rail { min-height: 0; }
+  .mini-sheet { display: none; }
+}
+@media print {
+  body { background: #fff; }
+  .topbar, .tabs, .no-print { display: none !important; }
+}

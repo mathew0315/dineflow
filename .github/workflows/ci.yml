@@ -35,8 +35,64 @@ jobs:
       - name: Test (PostgreSQL 整合測試 + 覆蓋率)
         run: pytest --cov=app --cov-report=term --cov-fail-under=85
 
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: TypeScript 型別檢查 + 建置
+        run: npm run build
+      - name: 依賴弱點掃描
+        run: npm audit --omit=dev --audit-level=high
+
+  e2e:
+    needs: [test, frontend]
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: demo
+      DEMO_MODE: "true"
+      DATABASE_URL: sqlite:///./e2e.db
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: 建置前端
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund && npm run build
+      - run: pip install -r requirements.txt -r e2e/requirements.txt
+      - run: python -m playwright install --with-deps chromium
+      - name: 啟動 Demo 服務
+        run: |
+          uvicorn app.main:app --port 8000 > server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:8000/health && break; sleep 1; done
+      - name: 瀏覽器端對端測試
+        run: python e2e/demo_flow.py
+      - name: 上傳截圖與 log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-screenshots
+          path: |
+            e2e-shots/
+            server.log
+
   docker:
-    needs: test
+    needs: [test, frontend, e2e]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

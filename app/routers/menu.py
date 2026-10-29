@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.deps import CurrentUser, current_user, require_owner
 from app.models import AuditLog, MenuItem, Store
-from app.schemas import MenuItemIn, MenuItemOut, MenuItemUpdate
+from app.schemas import MenuItemIn, MenuItemOut, MenuItemUpdate, StoreOut
 
 router = APIRouter(tags=["menu"])
 
@@ -13,7 +13,7 @@ router = APIRouter(tags=["menu"])
 def _get_own_item(db: Session, item_id: int, store_id: int) -> MenuItem:
     item = db.get(MenuItem, item_id)
     # 別家店的資料一律回 404（不回 403，避免洩漏資源存在與否）
-    if item is None or item.store_id != store_id:
+    if item is None or item.store_id != store_id or item.is_archived:
         raise HTTPException(404, "品項不存在")
     return item
 
@@ -21,8 +21,8 @@ def _get_own_item(db: Session, item_id: int, store_id: int) -> MenuItem:
 # ---------- 後台（需登入） ----------
 @router.get("/api/menu", response_model=list[MenuItemOut])
 def list_menu(user: CurrentUser = Depends(current_user), db: Session = Depends(get_db)):
-    return db.scalars(select(MenuItem).where(MenuItem.store_id == user.store_id)
-                      .order_by(MenuItem.category, MenuItem.id)).all()
+    return db.scalars(select(MenuItem).where(MenuItem.store_id == user.store_id, ~MenuItem.is_archived)
+                      .order_by(MenuItem.id)).all()
 
 
 @router.post("/api/menu", response_model=MenuItemOut, status_code=201)
@@ -57,7 +57,8 @@ def delete_item(item_id: int, owner: CurrentUser = Depends(require_owner), db: S
     item = _get_own_item(db, item_id, owner.store_id)
     # 軟刪除：歷史訂單仍引用此品項
     item.is_available = False
-    item.name = f"[已下架] {item.name}"[:100]
+    item.is_archived = True
+    db.add(AuditLog(store_id=owner.store_id, user_id=owner.id, action="menu.archive", detail=f"item={item.id}"))
     db.commit()
 
 
@@ -67,5 +68,14 @@ def public_menu(slug: str, db: Session = Depends(get_db)):
     store = db.scalar(select(Store).where(Store.slug == slug))
     if store is None:
         raise HTTPException(404, "店家不存在")
-    return db.scalars(select(MenuItem).where(MenuItem.store_id == store.id, MenuItem.is_available)
-                      .order_by(MenuItem.category, MenuItem.id)).all()
+    q = select(MenuItem).where(MenuItem.store_id == store.id, MenuItem.is_available, ~MenuItem.is_archived)
+    return db.scalars(q.order_by(MenuItem.id)).all()
+
+
+@router.get("/api/public/stores/{slug}", response_model=StoreOut)
+def public_store(slug: str, db: Session = Depends(get_db)):
+    """顧客端：店名、是否營業中。"""
+    store = db.scalar(select(Store).where(Store.slug == slug))
+    if store is None:
+        raise HTTPException(404, "店家不存在")
+    return store

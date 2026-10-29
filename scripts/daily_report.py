@@ -10,13 +10,13 @@
 """
 import logging
 import sys
-from datetime import UTC, date, datetime
+from datetime import date
 
 from sqlalchemy import select
 
 from app.db import SessionLocal
 from app.models import Store
-from app.routers.reports import build_daily_report
+from app.routers.reports import build_daily_report, today_local
 from app.services.line_messaging import get_notifier
 
 log = logging.getLogger("daily_report")
@@ -44,5 +44,5 @@ def run(day: date) -> int:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    target = date.fromisoformat(sys.argv[1]) if len(sys.argv) > 1 else datetime.now(UTC).date()
+    target = date.fromisoformat(sys.argv[1]) if len(sys.argv) > 1 else today_local()
     sys.exit(1 if run(target) else 0)

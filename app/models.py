@@ -74,6 +74,7 @@ class MenuItem(Base):
     category: Mapped[str] = mapped_column(String(50), default="未分類")
     price: Mapped[int]
     is_available: Mapped[bool] = mapped_column(default=True)
+    is_archived: Mapped[bool] = mapped_column(default=False)  # 軟刪除：歷史訂單仍引用
 
 
 class Order(Base):
