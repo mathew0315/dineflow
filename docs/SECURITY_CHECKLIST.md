@@ -18,5 +18,5 @@
 - [ ] JWT 存在 localStorage：若有 XSS 可被竊取；正式環境可改 HttpOnly Cookie + CSRF token
 - [ ] Refresh token / token 撤銷清單
 - [ ] LINE Pay 退款 API
-- [ ] 正式環境 HTTPS（由反向代理 / 雲端 LB 終結）
+- [x] 正式環境 HTTPS：Render 自動提供憑證並終結 TLS；uvicorn 以 `--proxy-headers` 取得正確的 https 網址
 - [ ] 顧客手機號碼為個資：保存期限與遮罩顯示
