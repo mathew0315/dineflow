@@ -147,3 +147,15 @@ def confirm_linepay(order_id: int, transactionId: str = Query(pattern=r"^\d{1,25
     order.payment_status = PaymentStatus.PAID
     db.commit()
     return {"order_id": order.id, "payment_status": order.payment_status}
+
+
+@router.get("/api/public/payments/linepay/cancel")
+def cancel_linepay(order_id: int, db: Session = Depends(get_db)):
+    """使用者在 LINE Pay 頁面取消付款後的 redirect：訂單維持未付款，可重新發起付款。"""
+    order = db.get(Order, order_id)
+    if order is None or order.payment_method != PaymentMethod.LINEPAY:
+        raise HTTPException(404, "訂單不存在")
+    if order.payment_status == PaymentStatus.UNPAID:
+        order.payment_txn_id = None  # 作廢本次交易，避免舊 transactionId 被拿去 confirm
+        db.commit()
+    return {"order_id": order.id, "payment_status": order.payment_status, "message": "已取消付款，可重新付款"}

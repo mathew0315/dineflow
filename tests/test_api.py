@@ -182,3 +182,16 @@ def test_daily_report_excludes_cancelled(client, owner_a):
     assert rep["revenue"] == 130
     assert rep["by_channel"] == {"online": 100, "pos": 30}
     assert rep["top_items"][0] == {"name": "滷肉飯", "quantity": 2}
+
+
+def test_linepay_cancel_invalidates_transaction(client, owner_a, gateway):
+    rice = add_item(client, owner_a, price=80)
+    order = _online_order(client, items=[{"menu_item_id": rice["id"], "quantity": 1}], method="linepay").json()
+    txn = client.post(f"/api/public/orders/{order['id']}/linepay?phone={PHONE}").json()["transaction_id"]
+
+    r = client.get(f"/api/public/payments/linepay/cancel?order_id={order['id']}")
+    assert r.status_code == 200 and r.json()["payment_status"] == "unpaid"
+    # 取消後舊 transactionId 不可再 confirm
+    url = f"/api/public/payments/linepay/confirm?order_id={order['id']}&transactionId={txn}"
+    assert client.get(url).status_code == 404
+    assert gateway.confirms == []

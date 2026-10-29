@@ -34,7 +34,7 @@ PostgreSQL 16
 多租戶策略：**Shared DB + shared schema + `store_id` 欄位隔離**。跨店存取一律回 404（不回 403，避免洩漏資源存在）。
 
 ## 品質
-- **44 個測試**：單元（狀態機、計價、驗證、簽章）＋ 整合（HTTP→DB 全流程、跨租戶攻擊、權限）＋ 第三方 Mock（LINE / LINE Pay）
+- **45 個測試**：單元（狀態機、計價、驗證、簽章）＋ 整合（HTTP→DB 全流程、跨租戶攻擊、權限）＋ 第三方 Mock（LINE / LINE Pay）
 - **覆蓋率 94%**（PostgreSQL 實測）
 - CI：ruff（含 bandit 資安規則）→ pip-audit 依賴弱點掃描 → pytest（PostgreSQL service）→ Docker build
 - 資安對照 OWASP Top 10:2025：[`docs/SECURITY_CHECKLIST.md`](docs/SECURITY_CHECKLIST.md)
@@ -65,7 +65,7 @@ TEST_DATABASE_URL=postgresql+psycopg://user:pw@localhost/dineflow_test pytest   
 | POST | `/api/pos/orders` | 登入 |
 | GET/PATCH | `/api/orders[/{id}/status]` | 登入 |
 | POST | `/api/public/orders/{id}/linepay?phone=` | 公開（手機驗證） |
-| GET | `/api/public/payments/linepay/confirm` | LINE Pay redirect |
+| GET | `/api/public/payments/linepay/confirm`、`/cancel` | LINE Pay redirect |
 | GET | `/api/reports/daily` | owner |
 
 ## 文件
