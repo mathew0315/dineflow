@@ -85,3 +85,14 @@ def test_database_url_tolerates_pasted_quotes():
     expected = "postgresql+psycopg://" + url.removeprefix("postgresql://")
     assert Settings(database_url=f'"{url}"').database_url == expected
     assert Settings(database_url=f"  {url}\n").database_url == expected
+
+
+def test_database_url_tolerates_whole_env_paste():
+    url = "postgresql://u:p@ep-x.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    expected = "postgresql+psycopg://" + url.removeprefix("postgresql://")
+    # 實際發生過：結尾多一個引號 → libpq 報 invalid channel_binding value: "require""
+    assert Settings(database_url=url + '"').database_url == expected
+    # 連 KEY= 一起貼、或按「Copy .env」一次貼兩行
+    assert Settings(database_url=f'DATABASE_URL="{url}"').database_url == expected
+    two_lines = f'DATABASE_URL="{url}"\nDATABASE_URL_POOLED="postgresql://u:p@pooler/neondb"'
+    assert Settings(database_url=two_lines).database_url == expected
