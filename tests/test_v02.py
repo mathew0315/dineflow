@@ -78,3 +78,10 @@ def test_archived_item_hidden_and_cannot_be_reenabled(client, owner_a):
     r = client.post("/api/public/stores/shop-a/orders", json={
         "items": [{"menu_item_id": item["id"], "quantity": 1}], "customer_name": "王", "customer_phone": PHONE})
     assert r.status_code == 409  # 已下架 = 不可點（is_available=False）
+
+
+def test_database_url_tolerates_pasted_quotes():
+    url = "postgresql://u:p@ep-x.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    expected = "postgresql+psycopg://" + url.removeprefix("postgresql://")
+    assert Settings(database_url=f'"{url}"').database_url == expected
+    assert Settings(database_url=f"  {url}\n").database_url == expected

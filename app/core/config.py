@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def use_psycopg3_driver(cls, v: str) -> str:
+        # 從 .env 範本複製時常會連引號、空白一起貼上，先清掉
+        v = v.strip().strip('"').strip("'").strip()
         # 雲端資料庫（Neon、Render）給的是 postgres:// 或 postgresql://，統一指定 psycopg 3 驅動
         for prefix in ("postgres://", "postgresql://"):
             if v.startswith(prefix):
