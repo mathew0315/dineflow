@@ -46,4 +46,7 @@
 | 開網頁要等很久 | 免費主機休眠中，喚醒約 1 分鐘，屬正常 |
 | Render build 失敗在 `npm ci` | 確認 `frontend/package-lock.json` 有 commit |
 | 啟動後 500、log 有 `OperationalError` | `DATABASE_URL` 貼錯，或 Neon 專案被刪；到 Render → Environment 修正後 Manual Deploy |
+| 啟動失敗、log 有 `invalid channel_binding value` | 連線字串夾帶引號；新版程式已自動清除，重新部署即可 |
+| 啟動失敗、log 有 `password authentication failed` | 複製到被遮住的 `****` 密碼；到 Neon → Connect → Postgres database 分頁，打開 Show password 後用複製按鈕 |
+| log 有 IPv6 位址 `Network is unreachable` | Render 不支援 IPv6，屬正常；看同一段 log 裡 IPv4 位址那幾行的錯誤才是真正原因 |
 | 示範店改過的資料不見了 | 設計如此：`DEMO_MODE=true` 每次喚醒重置 |
