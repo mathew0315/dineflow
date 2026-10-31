@@ -53,7 +53,7 @@ PostgreSQL 16（正式：Neon；測試：CI service）
 - 前後端打包成**一個 Docker 映像**：部署只需一個免費 web service，也沒有跨網域 CORS 問題。
 
 ## 品質
-- **52 個後端測試**：單元（狀態機、計價、驗證、簽章）＋ 整合（HTTP→DB 全流程、跨租戶攻擊、權限、時區切日）＋ 第三方 Mock（LINE / LINE Pay）
+- **54 個後端測試**：單元（狀態機、計價、驗證、簽章）＋ 整合（HTTP→DB 全流程、跨租戶攻擊、權限、時區切日）＋ 第三方 Mock（LINE / LINE Pay）
 - **覆蓋率 94%**（PostgreSQL 實測）
 - **瀏覽器端對端測試**（Playwright）：顧客點餐 → 看板推進 → 顧客頁自動變「可取餐」→ POS → 改價 → 報表 → 店員權限 → 錯誤處理
 - CI：ruff（含 bandit 資安規則）→ pip-audit → pytest（PostgreSQL）＋ 前端 TypeScript 型別檢查與 build ＋ npm audit → Docker build
